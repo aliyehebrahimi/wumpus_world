@@ -1,4 +1,4 @@
-# Exercise 7: Wumpus World
+# Wumpus World
 
 Demonstrate your comprehension of the knowledge-based agent design, and the rules
 of the wumpus world problem.
