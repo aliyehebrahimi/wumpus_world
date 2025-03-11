@@ -47,7 +47,7 @@ class WumpusWorldAgent:
         tuple
             A tuple containing the percept and current time (percept, time).
         """
-        pass
+        return (percept, self.time)
 
     def make_action_query(self) -> Tuple[str, int]:
         """Create an action query with current time.
@@ -57,7 +57,7 @@ class WumpusWorldAgent:
         tuple
             A tuple containing the action query string and current time ("action?", time).
         """
-        pass
+        return ("action?", self.time)
 
     def make_action_sentence(self, action: Callable) -> Tuple[Callable, int]:
         """Create an action sentence with current time.
@@ -72,7 +72,7 @@ class WumpusWorldAgent:
         tuple
             A tuple containing the action and current time (action, time).
         """
-        pass
+        return (action, self.time)
 
     def action(self, percept: Percept) -> Optional[Callable]:
         """Process a percept and return an action based on the knowledge base.
