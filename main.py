@@ -1,15 +1,12 @@
-# Main
-# A demonstration of the WumpusWorld and WumpusWorldAgent.
-# Aliyeh Ebrahimi
-
+# Main Wumpus World Simulation
+# Revised with proper termination conditions and enhanced debugging
 
 from wumpus_world import WumpusWorld
 from wumpus_world_agent import WumpusWorldAgent
 from knowledge_base import KnowledgeBase
 
-
 def main():
-    # Initialize the Wumpus World with the example configuration from tests
+    # Initialize world with test configuration
     world = WumpusWorld(
         agent_location=(1, 1),
         agent_direction="East",
@@ -20,69 +17,70 @@ def main():
         pit_locations=[(3, 1), (3, 3), (4, 4)],
     )
 
-    # Initialize the Knowledge Base and Agent
+    # Initialize agent components
     kb = KnowledgeBase()
     agent = WumpusWorldAgent(kb)
-    agent.world_arg = world  # Temporary hack to give agent access to world state
-
-    # Simulation loop
+    
+    # Simulation parameters
     print("Starting Wumpus World Simulation...")
     print(f"Agent starts at {world.agent_location}, facing {world.agent_direction}")
-    print(
-        f"Wumpus at {world.wumpus_location}, "
-        f"Gold at {world.gold_location}, "
-        f"Pits at {world.pit_locations}"
-    )
+    print(f"Wumpus at {world.wumpus_location}, Gold at {world.gold_location}, Pits at {world.pit_locations}")
     print("-" * 40)
 
     step = 0
-    max_steps = 50  # Prevent infinite loop
+    max_steps = 50
+    has_gold = False
 
-    while (
-        step < max_steps
-        and world.agent_alive
-        and world.agent_location is not None
-        and agent.action is not None
-    ):
+    while step < max_steps and world.agent_alive:
         step += 1
-        current_percept = world.percept(world.agent_location)
-        new_line_str = "\n" if step > 1 else ""
-        print(
-            f"{new_line_str}Step {step}: Agent at {world.agent_location}, "
-            f"facing {world.agent_direction}"
-        )
-        print(f"Percept: {current_percept}")
+        current_loc = world.agent_location
+        current_dir = world.agent_direction
+        
+        # Get current percepts
+        percept = world.percept(current_loc)
+        action = agent.action(percept)
+        
+        # Print step header
+        print(f"\nStep {step}: Agent at {current_loc}, facing {current_dir}")
+        print(f"Percept: {percept}")
+        print(f"Action: {action.__name__ if action else 'None'}")
 
-        # Agent decides and performs an action
-        action = agent.action(current_percept)
-        action_name = action.__name__
-        print(f"Action: {action_name}")
-        action(agent, world)
+        # Execute action if possible
+        if action:
+            action(agent, world)
+            
+            # Update gold status
+            if action.__name__ == "grab" and world.gold_location is None:
+                if not has_gold:
+                    print("Gold grabbed!")
+                    has_gold = True
+                else:
+                    print("Agent tries to grab but already has gold")
 
-        if (
-            not world.agent_alive
-            or world.agent_location is None
-            or (world.gold_location is None and action_name != "climb")
-        ):
-            print("-" * 40)
-
-        # Check agent's status
+        # Check termination conditions
         if not world.agent_alive:
-            print("Agent died! Game Over.")
+            print("\nAgent died! Game Over.")
             break
-        elif world.agent_location is None:
-            print(f"Agent climbed out at {WumpusWorld.EXIT_LOCATION}!")
-            if world.gold_location is None:
-                print("Victory! Agent grabbed the gold and escaped!")
+            
+        if world.agent_location is None:
+            if has_gold:
+                print("\nVictory! Agent escaped with the gold!")
             else:
-                print("Agent escaped but didn’t grab the gold.")
+                print("\nAgent escaped empty-handed")
             break
-        elif world.gold_location is None and action_name != "climb":
-            print("Gold has been grabbed!")
+            
+        # Print world state
+        print(f"New position: {world.agent_location}")
+        print(f"Gold carried: {has_gold}")
+        print("-" * 40)
+
+        # Early exit if gold collected and at exit
+        if has_gold and world.agent_location == (1, 1):
+            print("Agent returned to exit with gold!")
+            break
 
     if step >= max_steps:
-        print("Simulation ended: Maximum steps reached.")
-
+        print("\nSimulation stopped: Maximum steps reached")
 
 if __name__ == "__main__":
     main()
